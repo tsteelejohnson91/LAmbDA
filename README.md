@@ -1,5 +1,5 @@
 # LAmbDA
-Label Ambiguous Domain Adaption
+Label Ambiguous Domain Adaption\n
 Travis S Johnson MS, Yi Wu PhD, Yatong Han BS, Kun Huang PhD
 
 Dependencies: Numpy, Math, Scipy, TensorFlow
