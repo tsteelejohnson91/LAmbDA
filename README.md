@@ -27,6 +27,7 @@ Usage is as follows:
 python3 LAmbDA.py train Xfile Yfile Gfile gamma delta tau lambda hidden_feats cutoff_prc iterations model_file  
 python3 LAmbDA.py train train_data.mat train_labels.mat label_mask3.mat 0.5 0.7 2 3.5 200 90 100 LAmbDA_model 
 
-The code used for the writing of the manuscript is in the file tf_fuzzy_nn8.py which includes rnadom cross validation.  
-The full datafiles would not fit on github and are stored locally.
+The code used for the writing of the manuscript is in the file tf_fuzzy_nn8.py which includes random cross validation.  
+The full datafiles would not fit on github and are stored locally. Improvements are being made to the LAmbDA.py program  
+to add more functionality and to use previously trained models.
 
