@@ -2,7 +2,7 @@
 Label Ambiguous Domain Adaption  
 Travis S Johnson MS, Zhi Huang MS, Christina Yu BS, Tongxin Wang BS, Yi Wu PhD, Yatong Han BS, Kun Huang PhD, Jie Zhang PhD
 
-Dependencies: Numpy, Math, Scipy, TensorFlow
+Dependencies: Numpy, Math, Scipy, TensorFlow, Optunity
 
 LAmbDA is an algorithm that assigns unknown labels to datasets and trains
 on those labels across multiple datasets. This process requires inputting
