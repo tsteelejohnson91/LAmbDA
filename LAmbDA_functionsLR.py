@@ -47,16 +47,16 @@ def resample(prc_cut,Y,Gtmp,train,gamma):
 			rem = rem + choice.tolist()
 	return np.concatenate((list([val for val in train if val not in rem]),add));
 
-def select_feats(X,num_zero_prc_cut,var_prc_cut):
+def select_feats(Xtmp,num_zero_prc_cut,var_prc_cut):
 	#*********************************************************************
 	# remove features with many zeros
-	num_feat_zeros = np.sum(X==0,axis=1);
-	X = X[num_feat_zeros<num_zero_prc_cut*X.shape[1],:]
+	num_feat_zeros = np.sum(Xtmp==0,axis=1);
+	Xtmp = Xtmp[num_feat_zeros<num_zero_prc_cut*Xtmp.shape[1],:]
 	#*********************************************************************
 	# remove features with low variance
-	feat_vars = np.var(X,axis=1)
-	X = X[feat_vars>np.percentile(feat_vars,var_prc_cut),:]
-	return(X)
+	feat_vars = np.var(Xtmp,axis=1)
+	Xtmp = Xtmp[feat_vars>np.percentile(feat_vars,var_prc_cut),:]
+	return(Xtmp)
 
 def run_LAmbDA(gamma, delta, tau, prc_cut, bs_prc, do_prc, lambda1):
 	print("gamma=%.4f, delta=%.4f, tau=%.4f, prc_cut=%.4f, bs_prc=%.4f, do_prc=%.4f, lambda1= %.4f" % (gamma, delta, tau, prc_cut, bs_prc, do_prc, lambda1))
@@ -130,8 +130,8 @@ def run_LAmbDA(gamma, delta, tau, prc_cut, bs_prc, do_prc, lambda1):
 	if prt:
 		blah = sess.run(predict, feed_dict=tensor_test);
 		#blah2 = sess.run(layer1, feed_dict=tensor_test);
-		sio.savemat('preds116_cv' + str(cv) + '.mat', {'preds': blah});
-		sio.savemat('truth116_cv' + str(cv) + '.mat', {'labels': Y[test, :]});
+		sio.savemat('preds_cv' + str(cv) + '.mat', {'preds': blah});
+		sio.savemat('truth_cv' + str(cv) + '.mat', {'labels': Y[test, :]});
 		#sio.savemat('hidden81_cv' + str(cv) + '.mat', {'hidden': blah2});
 	acc = sess.run(loss1, feed_dict=tensor_test)
 	print("loss1=%.4f, gamma=%.4f, delta=%.4f, tau=%.4f, prc_cut=%.4f, bs_prc=%.4f, do_prc=%.4f, lambda1= %.4f" % (acc, gamma, delta, tau, prc_cut, bs_prc, do_prc, lambda1)) 
@@ -145,8 +145,19 @@ for i in range(1,11):
 	global X, Y, Gnp, Dnp, train, test, prt, cv
 	cv = i;
 	print('Cross validation step: '+str(cv))
+	
+	#Simulated hold 1 splat2
+	X = sio.loadmat('LAmbDA_CV_revision/splat2_hold1_expr.mat');
+	X = np.array(X['X']);
+	Y = sio.loadmat('LAmbDA_CV_revision/splat2_hold1_labs.mat');
+	Y = np.array(Y['Y']);
+	G = sio.loadmat('LAmbDA_CV_revision/splat2_hold1_mask.mat');
+	Gnp = np.array(G['G']);
+	D = sio.loadmat('LAmbDA_CV_revision/splat2_hold1_dat.mat');
+	Dnp = np.array(D['D']);
+	
 	'''
-	X = sio.loadmat('LAmbDA/LAmbDA_data/ZeiselLakeDarm_cpmtpm.mat');
+	X = sio.loadmat('LAmbDA/LAmbDA_data/ZeiselLakeDarm_cpmtpm2.mat');
 	X = np.array(X['X']);
 	Y = sio.loadmat('LAmbDA/LAmbDA_data/ZeiselLakeDarm_labels.mat');
 	Y = np.array(Y['Y']);
@@ -154,6 +165,7 @@ for i in range(1,11):
 	Gnp = np.array(G['G']);
 	D = sio.loadmat('LAmbDA/LAmbDA_data/ZeiselLakeDarm_dset.mat');
 	Dnp = np.array(D['D']);
+	'''
 	'''
 	X = sio.loadmat('pancreas/pancreasXexpr.mat');
 	X = np.array(X['X']);
@@ -163,6 +175,7 @@ for i in range(1,11):
 	Gnp = np.array(G['G']);
 	D = sio.loadmat('pancreas/pancreasDdset.mat');
 	Dnp = np.array(D['D']);
+	'''
 	#print(X.shape)
 	X = np.log2(np.transpose(select_feats(np.transpose(X),0.5,80))/10+1);
 	#print(X.shape)
@@ -173,7 +186,7 @@ for i in range(1,11):
 	train = perm[0:train_samp+1];
 	test = perm[train_samp+1:train_samp+test_samp+1];
 	val = perm[train_samp+test_samp+1:train_samp+test_samp+val_samp+1];
-	while(np.sum(np.sum(Y[train,:],0)<1)>0):
+	while(np.sum(np.sum(Y[train,:],0)<5)>0):
 		perm = np.random.permutation(X.shape[0]);
 		train = perm[0:train_samp+1];
 		test = perm[train_samp+1:train_samp+test_samp+1];

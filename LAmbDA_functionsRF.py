@@ -31,16 +31,16 @@ def resample(prc_cut,Y,Gtmp,train,gamma):
 			rem = rem + choice.tolist()
 	return np.concatenate((list([val for val in train if val not in rem]),add));
 
-def select_feats(X,num_zero_prc_cut,var_prc_cut):
+def select_feats(Xtmp,num_zero_prc_cut,var_prc_cut):
 	#*********************************************************************
 	# remove features with many zeros
-	num_feat_zeros = np.sum(X==0,axis=1);
-	X = X[num_feat_zeros<num_zero_prc_cut*X.shape[1],:]
+	num_feat_zeros = np.sum(Xtmp==0,axis=1);
+	Xtmp = Xtmp[num_feat_zeros<num_zero_prc_cut*Xtmp.shape[1],:]
 	#*********************************************************************
 	# remove features with low variance
-	feat_vars = np.var(X,axis=1)
-	X = X[feat_vars>np.percentile(feat_vars,var_prc_cut),:]
-	return(X)
+	feat_vars = np.var(Xtmp,axis=1)
+	Xtmp = Xtmp[feat_vars>np.percentile(feat_vars,var_prc_cut),:]
+	return(Xtmp)
 
 def get_yn(predict,ys,delta,tau,output_feats):
 	D = tf.cast(Dnp, tf.float32);
@@ -100,7 +100,7 @@ def run_LAmbDA(gamma, delta, tau, prc_cut, bs_prc, num_trees, max_nodes):
 	train_op = forest_graph.training_graph(xs, yin)
 	loss_op = forest_graph.training_loss(xs, yin)
 	print("Loss and train ops created")
-	predict = forest_graph.inference_graph(xs)
+	predict, _, _ = forest_graph.inference_graph(xs)
 	print("Tensor forest variables created through predict")
 	accuracy_op = tf.reduce_mean(tf.reduce_sum(tf.square(tf.one_hot(yin,output_feats)-predict),reduction_indices=[1]))
 	print(tf.reduce_sum(tf.square(tf.one_hot(yin,output_feats)-predict),reduction_indices=[1]))
@@ -114,11 +114,14 @@ def run_LAmbDA(gamma, delta, tau, prc_cut, bs_prc, num_trees, max_nodes):
 	trainI = train2[np.in1d(train2,np.where(YIrs==1))];
 	testI = test[np.in1d(test,np.where(YIrs==1))];
 	print("trainI testI created")
-	init_vars=tf.global_variables_initializer()
+	#init_vars=tf.global_variables_initializer()
+	init_vars = tf.group(tf.global_variables_initializer(),
+	resources.initialize_resources(resources.shared_resources()))
 	sess = tf.Session()
 	sess.run(init_vars)
 	print("Session started")
-	beep = sess.run(predict,feed_dict={xs:X[train2[0:bs],:]});
+	#beep = sess.run(predict,feed_dict={xs:X[1:100,:]});
+	#beep = sess.run(predict,feed_dict={xs:X[train2[0:bs],:]});
 	tensor_trainI = {xs: X[trainI, :], yin: sess.run(tf.argmax(get_yi(rowsums,G2,Y[trainI, :]),axis=1))}
 	print("tensor_trainI made")
 	tensor_testI = {xs: X[testI, :], yin: sess.run(tf.argmax(get_yi(rowsums,G2,Y[testI, :]),axis=1))}
@@ -148,8 +151,8 @@ def run_LAmbDA(gamma, delta, tau, prc_cut, bs_prc, num_trees, max_nodes):
 				tensor_train = {xs: X[train2[0:bs], :], yin: sess.run(get_yn(sess.run(predict,feed_dict={xs:X[train2[0:bs],:]}),Y[train2[0:bs], :],delta,tau,output_feats))}
 	if prt:
 		blah = sess.run(predict, feed_dict=tensor_test);
-		sio.savemat('preds118_cv' + str(cv) + '.mat', {'preds': blah});
-		sio.savemat('truth118_cv' + str(cv) + '.mat', {'labels': Y[test, :]});
+		sio.savemat('preds_cv' + str(cv) + '.mat', {'preds': blah});
+		sio.savemat('truth_cv' + str(cv) + '.mat', {'labels': Y[test, :]});
 	acc = sess.run(accuracy_op, feed_dict=tensor_test) 
 	print("loss1=%.4f, gamma=%.4f, delta=%.4f, tau=%.4f, prc_cut=%i, bs_prc=%.4f, num_trees=%i, max_nodes=%i" % (acc, gamma, delta, tau, prc_cut, bs_prc, num_trees, max_nodes))
 	tf.reset_default_graph();
@@ -161,11 +164,21 @@ for i in range(1,11):
 	global X, Y, Gnp, Dnp, train, test, prt, cv
 	cv = i;
 	print('Cross validation step: '+str(cv))
+	
+	#Simulated hold 2
+	X = sio.loadmat('LAmbDA_CV_revision/splat_hold2_expr.mat');
+	X = np.array(X['X']);
+	Y = sio.loadmat('LAmbDA_CV_revision/splat_hold2_labs.mat');
+	Y = np.array(Y['Y']);
+	G = sio.loadmat('LAmbDA_CV_revision/splat_hold2_mask.mat');
+	Gnp = np.array(G['G']);
+	D = sio.loadmat('LAmbDA_CV_revision/splat_hold2_dat.mat');
+	Dnp = np.array(D['D']);
+	
 	'''
-	X = sio.loadmat('LAmbDA/LAmbDA_data/ZeiselLakeDarm_cpmtpm.mat');
+	X = sio.loadmat('LAmbDA/LAmbDA_data/ZeiselLakeDarm_cpmtpm2.mat');
 	X = np.array(X['X']);
 	X = X.astype(np.float32)
-	X = np.log2(np.transpose(select_feats(np.transpose(X),0.5,80))/10+1);
 	Y = sio.loadmat('LAmbDA/LAmbDA_data/ZeiselLakeDarm_labels.mat');
 	Y = np.array(Y['Y']);
 	Y = Y.astype(np.float32)
@@ -173,6 +186,7 @@ for i in range(1,11):
 	Gnp = np.array(G['G']);
 	D = sio.loadmat('LAmbDA/LAmbDA_data/ZeiselLakeDarm_dset.mat');
 	Dnp = np.array(D['D']);
+	'''
 	'''
 	X = sio.loadmat('pancreas/pancreasXexpr.mat');
 	X = np.array(X['X']);
@@ -182,6 +196,8 @@ for i in range(1,11):
 	Gnp = np.array(G['G']);
 	D = sio.loadmat('pancreas/pancreasDdset.mat');
 	Dnp = np.array(D['D']);
+	'''
+	X = np.log2(np.transpose(select_feats(np.transpose(X),0.5,80))/10+1);
 	train_samp = int(np.floor(0.6*X.shape[0]))
 	test_samp = int(np.floor(0.2*X.shape[0]))
 	val_samp = int(X.shape[0] - (train_samp+test_samp))
@@ -189,7 +205,7 @@ for i in range(1,11):
 	train = perm[0:train_samp+1];
 	test = perm[train_samp+1:train_samp+test_samp+1];
 	val = perm[train_samp+test_samp+1:train_samp+test_samp+val_samp+1];
-	while(np.sum(np.sum(Y[train,:],0)<1)>0):
+	while(np.sum(np.sum(Y[train,:],0)<5)>0):
 		perm = np.random.permutation(X.shape[0]);
 		train = perm[0:train_samp+1];
 		test = perm[train_samp+1:train_samp+test_samp+1];
@@ -197,7 +213,7 @@ for i in range(1,11):
 	optunity_it = 0;
 	prt = False
 	opt_params = None
-	opt_params, _, _ = opt.minimize(run_LAmbDA,solver_name='sobol', gamma=[0.8,1.2], delta=[0.05,0.95], tau=[1.0,2.0], prc_cut=[20,50], bs_prc=[0.2,0.6], num_trees=[10,200], max_nodes=[100,1000], num_evals=50)
+	opt_params, _, _ = opt.minimize(run_LAmbDA,solver_name='sobol', gamma=[0.8,1.2], delta=[0.05,0.95], tau=[10.0,11.0], prc_cut=[20,50], bs_prc=[0.2,0.6], num_trees=[10,200], max_nodes=[100,1000], num_evals=50)
 	print(opt_params)
 	prt = True
 	train = perm[0:train_samp+test_samp+1]

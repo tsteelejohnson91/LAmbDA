@@ -143,9 +143,9 @@ def run_LAmbDA(gamma, delta, tau, prc_cut, bs_prc, do_prc, hidden_feats, lambda1
 	if prt:
 		blah = sess.run(predict, feed_dict=tensor_test);
 		blah2 = sess.run(layer1, feed_dict=tensor_test);
-		sio.savemat('preds114_cv' + str(cv) + '.mat', {'preds': blah});
-		sio.savemat('truth114_cv' + str(cv) + '.mat', {'labels': Y[test, :]});
-		sio.savemat('hidden114_cv' + str(cv) + '.mat', {'hidden': blah2});
+		sio.savemat('preds_cv' + str(cv) + '.mat', {'preds': blah});
+		sio.savemat('truth_cv' + str(cv) + '.mat', {'labels': Y[test, :]});
+		sio.savemat('hidden_cv' + str(cv) + '.mat', {'hidden': blah2});
 	print("loss1=%.4f, gamma=%.4f, delta=%.4f, tau=%.4f, prc_cut=%.4f, bs_prc=%.4f, do_prc=%.4f, hidden_feats=%.4f, lambda1= %.4f, lambda2= %.4f, lambda3= %.4f" % ( sess.run(loss1, feed_dict=tensor_test), gamma, delta, tau, prc_cut, bs_prc, do_prc, hidden_feats, lambda1, lambda2, lambda3))
 	acc = sess.run(loss1, feed_dict=tensor_test) 
 	tf.reset_default_graph();
@@ -154,11 +154,11 @@ def run_LAmbDA(gamma, delta, tau, prc_cut, bs_prc, do_prc, hidden_feats, lambda1
 
 
 # Running CV
-for i in range(1,11):
+for i in range(4,11):
 	global X, Y, Gnp, Dnp, train, test, prt, cv
 	cv = i;
 	print('Cross validation step: '+str(cv))
-	X = sio.loadmat('LAmbDA/LAmbDA_data/ZeiselLakeDarm_cpmtpm.mat');
+	X = sio.loadmat('LAmbDA/LAmbDA_data/ZeiselLakeDarm_cpmtpm2.mat');
 	X = np.array(X['X']);
 	Y = sio.loadmat('LAmbDA/LAmbDA_data/ZeiselLakeDarm_labels.mat');
 	Y = np.array(Y['Y']);
@@ -192,7 +192,7 @@ for i in range(1,11):
 		val = perm[train_samp+test_samp+1:train_samp+test_samp+val_samp+1];
 	prt = False
 	opt_params = None
-	opt_params, _, _ = opt.minimize(run_LAmbDA,solver_name='sobol', gamma=[0.8,1.2], delta=[0.05,0.95], tau=[1.0,2.0], prc_cut=[20,50], bs_prc=[0.2,0.6], do_prc=[0.5,1], hidden_feats=[50,150], lambda1=[0,5], lambda2=[3,5], lambda3=[3,5], num_evals=50)
+	opt_params, _, _ = opt.minimize(run_LAmbDA,solver_name='sobol', gamma=[0.8,1.2], delta=[0.05,0.95], tau=[1.0,2.0], prc_cut=[20,50], bs_prc=[0.2,0.6], do_prc=[0.5,1], hidden_feats=[50,150], lambda1=[0,5], lambda2=[3,5], lambda3=[3,5], num_evals=10)
 	prt = True
 	train = perm[0:train_samp+test_samp+1]
 	test = val
