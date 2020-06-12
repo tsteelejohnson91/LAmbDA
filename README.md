@@ -1,7 +1,6 @@
 # LAmbDA
-Label Ambiguous Domain Adaption  
+Label Ambiguous Domain Adaption (https://pubmed.ncbi.nlm.nih.gov/31038689/)  
 Travis S Johnson MS, Tongxin Wang BS, Zhi Huang MS, Christina Yu BS, Yi Wu PhD, Yatong Han BS, Yan Zhang PhD, Kun Huang PhD, Jie Zhang PhD
-https://pubmed.ncbi.nlm.nih.gov/31038689/
 
 Dependencies: Numpy, Math, Scipy, TensorFlow, Optunity
 
